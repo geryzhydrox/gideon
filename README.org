@@ -35,13 +35,19 @@ shell -m= or =guix install -m=.
 
 * Subcommands:
 - =zeta init=
+
   Creates the directory =$ZETA_ROOT= and =root.scm= in it, which is
   initially just a "skeleton" to later load manifests into.
+
 - =zeta intall [-m | --manifest MANIFEST] PKG ...=
-  Installs the specified packages at the specified manifest, if
+
+    Installs the specified packages at the specified manifest, if
   specified, or prompts to select one from =$ZETA_ROOT=
+
 - =zeta remove [-m | --manifest MANIFEST] PKG ...=
+
   Same as =zeta install=, but for removing packages.
+
 - =zeta add MANIFEST ...=
 
   Creates a new manifest under MANIFEST ... (which is interpreted as
@@ -50,7 +56,11 @@ shell -m= or =guix install -m=.
   =root.scm= the manifest =~/.zeta/foo/bar.scm=, assuming that
   =$ZETA_ROOT= is left at its default value (and not otherwise
   modified programatically, via =%zeta-root=)
+  
 - =zeta del MANIFEST ...=
+
   Same as =zeta add=, except for deleting manifest.
+
 - =zeta list=
+
   Lists all installed packages and their respective manifests.
