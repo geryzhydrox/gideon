@@ -64,3 +64,11 @@ shell -m= or =guix install -m=.
 - =zeta list=
 
   Lists all installed packages and their respective manifests.
+
+* Wishlist / TODO
+- [X] Basic package/manifest management
+- [ ] Dry-runs before modifying manifests, =zeta=-level atomicity 
+- [ ] O(1) package location lookup table (?) 
+- [ ] Channel management
+- [ ] Upgrading via =guix pull= (?) 
+- [ ] Moonshot: Flatpak integration
