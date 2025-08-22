@@ -52,8 +52,8 @@ shell -m= or =guix install -m=.
 
   Creates a new manifest under MANIFEST ... (which is interpreted as
   a suffix-less path relative to =$ZETA_ROOT=) and adds it to
-  =root.scm=. For example: =zeta add foo/bar= would create and add to
-  =root.scm= the manifest =~/.zeta/foo/bar.scm=, assuming that
+  =root.scm=. For example: =zeta add foo/bar= would create and add the
+  manifest =~/.zeta/foo/bar.scm= to =root.scm=, assuming that
   =$ZETA_ROOT= is left at its default value (and not otherwise
   modified programatically, via =%zeta-root=)
   
