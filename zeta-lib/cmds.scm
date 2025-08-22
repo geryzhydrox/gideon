@@ -11,6 +11,7 @@
 	    zeta-init
 	    zeta-list))
 
+
 (define-recursive (zeta-add manifest-paths)
   (single manifest-path)
   (when (not (file-exists? %root-manifest))
@@ -20,7 +21,7 @@
 		   (string-append %zeta-root "/"
 				  (string-take manifest-path (1+ slash-index)))
 		   %zeta-root))
-	 (filepath (relative->absolute manifest-path)))
+	 (filepath (relative->absolute manifest-path %zeta-root)))
     ;; Abuse short-circuiting behaviour of `or` and `and` 
     (when (or (and (file-exists? filepath)
 		   (yn-prompt (format #f "Manifest ~a already exists. Overwrite?" filepath))
@@ -42,11 +43,11 @@
     (recurse
      (cdr manifest-paths) %rebuild?)
     (finish
-     (when %rebuild? (apply-root-manifest))))
+     (when (and %rebuild? (not %dry-run?)) (apply-root-manifest))))
 
 (define-recursive (zeta-del manifest-paths)
   (single manifest-path)
-  (let ((filepath (relative->absolute manifest-path)))
+  (let ((filepath (relative->absolute manifest-path %zeta-root)))
     (unless (file-exists? filepath)
       (error-with-msg (format #f "Specified manifest ~a does not exist" filepath)))
     (info-with-msg (format #f "Deleting manifest ~a" filepath))
@@ -61,7 +62,8 @@
     (recurse
      (cdr manifest-paths))
     (finish
-     (apply-root-manifest)))
+     (unless %dry-run? 
+       (apply-root-manifest))))
 
 (define-recursive (zeta-install pkgs manifest-path)
   (single pkg)
@@ -78,7 +80,7 @@
 				  (string-drop-right 
 				   (string-drop answer (1+ (string-length %zeta-root))) 4))))
       (set! manifest-path new-manifest-path)))
-  (let ((filepath (relative->absolute manifest-path)))
+  (let ((filepath (relative->absolute manifest-path %zeta-root)))
     (when creating-new-manifest? (zeta-add (list manifest-path)))
     (unless (file-exists? filepath)
       (info-with-msg (format #f "Specified manifest ~a does not exist" filepath))
@@ -95,7 +97,8 @@
   (recurse
    (cdr pkgs) manifest-path)
   (finish
-   (apply-root-manifest)))
+   (unless %dry-run? 
+     (apply-root-manifest))))
 
 (define-recursive (zeta-remove pkgs manifest-path)
   (single pkg)
@@ -121,7 +124,7 @@
 		 (string-drop answer (1+ (string-length %zeta-root))) 4) 
 		(error-with-msg "Specified package is not installed."))
 	    )))
-  (let ((filepath (relative->absolute manifest-path)))
+  (let ((filepath (relative->absolute manifest-path %zeta-root)))
     (unless (file-exists? filepath)
 	(error-with-msg (format #f "Specified manifest ~a does not exist" filepath)))
     (info-with-msg (format #f "Deleting package ~a from manifest ~a" pkg filepath))
@@ -140,7 +143,8 @@
        manifest-path
        #f))
   (finish
-   (apply-root-manifest)))
+   (unless %dry-run? 
+     (apply-root-manifest))))
 
 (define* (zeta-init #:optional (manual #t))
   (when (or
@@ -156,7 +160,7 @@
     (info-with-msg "Done.")
     ))
 
-(define (zeta-list)
+(define* (zeta-list #:optional (output-port #t))
   (define pkg+locations '())
   (ftw %zeta-root
 	 (lambda (filename statinfo flag)
@@ -170,8 +174,10 @@
 				 (append pkg+locations (list (list pkg+location filename))))))
 		       (read-pkgs filename)))
 	   #t))
-  (define max-len (apply max (map (lambda (lst) (string-length (car lst))) pkg+locations)))
-  (define format-str (string-append "~" (+ max-len 5) "a"))
+  (define padding 5)
+  (define max-len (apply max (map (lambda (lst)
+				    (string-length (car lst))) pkg+locations)))
+  (define format-str (string-append "~" (number->string (+ max-len padding)) "a"))
   (for-each (lambda (pkg+location)
-	      (format #t (string-append format-str " ~a\n") (car pkg+location)
+	      (format output-port (string-append format-str " ~a\n") (car pkg+location)
 		      (cadr pkg+location))) pkg+locations))

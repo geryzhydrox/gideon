@@ -50,6 +50,7 @@
 /doc/version-*.texi
 /m4/*
 /pre-inst-env
+/tests/*.log
 /test-env
 /test-tmp
 GPATH

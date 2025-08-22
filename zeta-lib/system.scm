@@ -4,8 +4,11 @@
   #:export (%zeta-root
 	    %root-manifest
 	    %rebuild?
+	    %dry-run?
 	    apply-root-manifest
 	    relative->absolute
+	    get-zeta-root
+	    set-zeta-root
 	    mkdir-p
 	    touch
 	    make-file-at-path
@@ -28,13 +31,15 @@
 
 (define %rebuild? #f)
 
+(define %dry-run? #f)
+
 (define* (apply-root-manifest #:optional (root-file %root-manifest))
   (unless (eq? (system* "guix" "package" "-m" root-file) 0)
     (error-with-msg "Guix package command failed. Make sure `guix` is properly installed."
 		    )))
 
-(define (relative->absolute rel-path)
-  (string-append %zeta-root
+(define* (relative->absolute rel-path #:optional (root-path %zeta-root))
+  (string-append root-path
 		 "/" rel-path
 		 ".scm"))
 
