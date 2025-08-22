@@ -7,23 +7,21 @@
 (set! %root-manifest (string-append %zeta-root "/root.scm"))
 (set! %dry-run? #t)
 
-(when (file-exists? %zeta-root)
-  (system* "rm" "-r" %zeta-root))
+;; (when (file-exists? %zeta-root)
+;;   (system* "rm" "-r" %zeta-root))
 
 (test-begin "zeta-install")
 (define test-manifest "foo")
 
 (zeta-add (list test-manifest))
 (zeta-install '("hello" "cowsay" "sl") test-manifest)
-
-(test-assert
-    (equal?
-     (read-pkgs (relative->absolute test-manifest))
-     '("hello" "cowsay" "sl")))
+(test-equal
+     (read-pkgs (relative->absolute test-manifest %zeta-root))
+  (list "hello" "cowsay" "sl"))
 
 (test-equal
     (read-manifests %root-manifest)
-  (list (relative->absolute "foo")))
+  (list (relative->absolute "foo" %zeta-root)))
 (test-end "zeta-install")
 
 
@@ -31,7 +29,7 @@
 (zeta-remove '("hello" "cowsay") test-manifest)
 
 (test-equal
-    (read-pkgs (relative->absolute test-manifest))
+    (read-pkgs (relative->absolute test-manifest %zeta-root))
 	       '("sl"))
 (test-end "zeta-remove")
 

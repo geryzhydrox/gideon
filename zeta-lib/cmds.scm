@@ -1,3 +1,4 @@
+
 (define-module (zeta-lib cmds)
   #:use-module (zeta-lib prompts)
   #:use-module (zeta-lib system)
@@ -15,6 +16,7 @@
 (define-recursive (zeta-add manifest-paths)
   (single manifest-path)
   (when (not (file-exists? %root-manifest))
+    (info-with-msg "No root manifest detected, creating new one...")
     (zeta-init #f))
   (let* ((slash-index (string-rindex manifest-path #\/))
 	 (path (if slash-index
@@ -41,7 +43,7 @@
 	     (new-root (root-with-manifests new-manifests)))
 	(write-file %root-manifest new-root))))
     (recurse
-     (cdr manifest-paths) %rebuild?)
+     %rebuild?)
     (finish
      (when (and %rebuild? (not %dry-run?)) (apply-root-manifest))))
 
@@ -95,7 +97,7 @@
 	   (new-file (manifest-with-pkgs new-pkgs)))
       (write-file filepath new-file)))
   (recurse
-   (cdr pkgs) manifest-path)
+   manifest-path)
   (finish
    (unless %dry-run? 
      (apply-root-manifest))))
@@ -138,7 +140,6 @@
       (write-file filepath new-file)
       ))
   (recurse
-   (cdr pkgs)
    (if manifest-provided?
        manifest-path
        #f))
@@ -147,6 +148,7 @@
      (apply-root-manifest))))
 
 (define* (zeta-init #:optional (manual #t))
+  (define filepath (format #f "~a/root.scm" %zeta-root))
   (when (or
 	 (not manual)   
 	 (and
@@ -154,8 +156,9 @@
 	  (if (file-exists? %zeta-root) 
 	      (yn-prompt "Root manifest already exists. Overwrite?")
 	      #t)))
-    (info-with-msg "Creating root manifest...")
+    (info-with-msg (format #f "Creating root manifest ~a..." filepath))
     (make-file-at-path %zeta-root "root.scm")
+    (write-file filepath (root-with-manifests '()))
     (set! %root-manifest (string-append %zeta-root "/" "root.scm"))
     (info-with-msg "Done.")
     ))

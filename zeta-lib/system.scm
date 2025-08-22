@@ -35,7 +35,8 @@
 
 (define* (apply-root-manifest #:optional (root-file %root-manifest))
   (unless (eq? (system* "guix" "package" "-m" root-file) 0)
-    (error-with-msg "Guix package command failed. Make sure `guix` is properly installed."
+    (error-with-msg "Guix package command failed. Make sure `guix` is properly installed and a network connection is available."
+		    ;; TODO: Add facility to pass different args to `guix`
 		    )))
 
 (define* (relative->absolute rel-path #:optional (root-path %zeta-root))
@@ -47,7 +48,7 @@
   (system* "mkdir" "-p" path))
 
 (define (touch filename)
-  (system* "touch" "-f" filename))
+  (system* "touch" filename))
 
 (define (make-file-at-path path filename)
   (mkdir-p path)
@@ -66,14 +67,22 @@
     (lambda (input-port)
       (read input-port))))
 
-(define (read-pkgs manifest)
+(define* (read-pkgs manifest #:optional (pedantic #t))
+  ;; "pedantic" arg: If #t, errors out on non-readable manifest, else interprets it as empty
   (match (read-file manifest)
     (('specifications->manifest
       ('quote
        (pkgs ...))) pkgs)
-    (_ '())))
+    (_ (if pedantic
+	   (begin
+	     (error-with-msg
+	      (format #f "Cannot read package specifications from manifest ~a" manifest))
+	     (error-with-msg
+	      (format #f "Manifests must have the format (specifications->manifest '(spec1 spec2 ...))")))
+	   '()))))
 
-(define (read-manifests root-file)
+(define* (read-manifests root-file #:optional (pedantic #t))
+  ;; "pedantic" arg: If #t, errors out on non-readable root, else interprets it as empty
   (match (read-file root-file)
     (('concatenate-manifests
       ('map ('lambda ('filepath)
@@ -82,7 +91,11 @@
 		 ('lambda ('input-port)
 		   ('read 'input-port)))))
 	    ('quote (manifests ...)))) manifests)
-    (_ '())))
+    (_ (if pedantic
+	   (begin (error-with-msg "Cannot read manifests from root file.")
+		  ;; TODO: More helpful error. Maybe add command like `zeta fix` too fix broken root?
+		  )
+	   '()))))
 
 (define (manifest-with-pkgs pkgs)
   (format #f "(specifications->manifest\n '(~a))"
@@ -113,20 +126,20 @@
   ;; First argument MUST be a list.
   (lambda (x)
     (syntax-case x (single recurse finish)
-      ((define-recursive (proc-name list-arg ...)
+      ((define-recursive (proc-name list-arg extra-arg ...)
 	 (single identifier)
 	 exp ...
-	 ;; Recurse with arguments recurse-arg ... 
+	 ;; Recurse with arguments (cdr list-arg) recurse-arg ... 
 	 (recurse recurse-arg ...)
 	 ;; If finished, evaluate expressions finish-exp ...
 	 (finish finish-exp ...))
-       ;; (with-syntax ((item (datum->syntax x 'item)))
        #'(define (proc-name list-arg ...)
-	   (define recurse? (not (nil? (cdar (list list-arg ...)))))
+	   (define recurse? (not (nil? (cdar (list list-arg)))))
 	   ;; `item` is introduced as a binding for a "single element" of the list
-	   (let ((identifier (caar (list list-arg ...))))
+	   (let ((identifier (caar (list list-arg))))
 	     exp ...
 	     (if recurse?
-		 (proc-name recurse-arg ...)
+		 ;; First arg is assumed to be (cdr list-arg).
+		 (proc-name (cdr list-arg) recurse-arg ...)
 		 (begin finish-exp ...))))
        ))))
