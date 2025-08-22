@@ -52,7 +52,6 @@
 /pre-inst-env
 /test-env
 /test-tmp
-/tests/*.trs
 GPATH
 GRTAGS
 GTAGS
