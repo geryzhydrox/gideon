@@ -133,9 +133,9 @@
 	 (recurse recurse-arg ...)
 	 ;; If finished, evaluate expressions finish-exp ...
 	 (finish finish-exp ...))
-       #'(define (proc-name list-arg ...)
+       #'(define (proc-name list-arg extra-arg ...)
 	   (define recurse? (not (nil? (cdar (list list-arg)))))
-	   ;; `item` is introduced as a binding for a "single element" of the list
+	   ;; `identifier` is introduced as a binding for a "single element" of the list
 	   (let ((identifier (caar (list list-arg))))
 	     exp ...
 	     (if recurse?
