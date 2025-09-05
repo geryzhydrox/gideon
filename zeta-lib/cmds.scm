@@ -158,7 +158,6 @@
     (info-with-msg (format #f "Creating root manifest ~a..." filepath))
     (make-file-at-path (%zeta-root) "root.scm")
     (write-file filepath (root-with-manifests '()))
-    ;; (set! %root-manifest (string-append (%zeta-root) "/" "root.scm")) ;; &&& change
     (%root-manifest (string-append (%zeta-root) "/" "root.scm"))
     (info-with-msg "Done.")
     ))

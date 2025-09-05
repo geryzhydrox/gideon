@@ -3,17 +3,9 @@
 	     (zeta-lib system)
 	     (zeta-lib term))
 
-;; (set! %zeta-root (string-append "." "/test_root"))
-;; (set! %root-manifest (string-append %zeta-root "/root.scm"))
-;; (set! %dry-run? #t)
-;; &&& change
-
 (%zeta-root (string-append "." "/test_root"))
 (%root-manifest (string-append (%zeta-root) "/root.scm"))
 (%dry-run? #t)
-
-;; (when (file-exists? %zeta-root)
-;;   (system* "rm" "-r" (%zeta-root)))
 
 (test-begin "zeta-install")
 (define test-manifest "foo")
