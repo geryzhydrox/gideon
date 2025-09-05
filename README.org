@@ -24,9 +24,9 @@ your package manifest(s) to VC via git and have an overview of what's
 installed at all times.
 
 * Technical aspects
-=zeta= aims to be lightweight, programmed in procedural style and
-simple.  It uses =guix='s =manifest= feature (specifically,
-=specifications->manifest= and =concatenate-manifests=) to build a
+=zeta= aims to be simple, lightweight, and programmed in a functional style or
+procedural style when convenient.  It uses =guix='s =manifest= feature
+(specifically, =specifications->manifest= and =concatenate-manifests=) to build a
 "root" manifest (=root.scm= by default) from a directory tree (located
 at =$ZETA_ROOT=, =$HOME/.zeta= by default) and install it via =guix
 install -m=. This has the advantage that you can manually use both the
@@ -38,10 +38,12 @@ shell -m= or =guix install -m=.
 
   Creates the directory =$ZETA_ROOT= and =root.scm= in it, which is
   initially just a "skeleton" to later load manifests into.
+  Does not usually need to be invoked manually, unless one wants to
+  completely re-initialize the directory tree. 
 
 - =zeta intall [-m | --manifest MANIFEST] PKG ...=
 
-    Installs the specified packages at the specified manifest, if
+  Installs the specified packages at the specified manifest, if
   specified, or prompts to select one from =$ZETA_ROOT=
 
 - =zeta remove [-m | --manifest MANIFEST] PKG ...=
@@ -65,6 +67,23 @@ shell -m= or =guix install -m=.
 
   Lists all installed packages and their respective manifests.
 
+- =zeta apply=
+
+  Applies the root manifest. Equivalent to =guix package -m $ZETA_ROOT/root.scm=.
+    
+- =zeta rescan=   
+
+  Rescans root manifest from the directory tree. Use this if you have manually
+  operated on manifests, causing =root.scm= to get out of sync.
+
+- =zeta purge=
+
+  Deletes all files in the directory tree not specified in the root
+  manifest.  Complementary to =zeta rescan=. Use this if you want to
+  quickly dispose of manually / accidentally created files under
+  =$ZETA_ROOT= which are not included in the root
+  manifest (e.g. Emacs backup files, notes).
+  
 * Wishlist / TODO
 - [X] Basic package/manifest management
 - [ ] Dry-runs before modifying manifests, =zeta=-level atomicity 

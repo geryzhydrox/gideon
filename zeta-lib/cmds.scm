@@ -8,8 +8,10 @@
 	    zeta-del
 	    zeta-install
 	    zeta-remove
-	    zeta-init
-	    zeta-list))
+	    zeta-list
+	    zeta-rescan
+	    zeta-purge
+	    zeta-init))
 
 (define (zeta-apply)
   (unless (%dry-run?) (apply-root-manifest)))
@@ -113,7 +115,7 @@
 		  (eq? flag 'regular)
 		  (not (string= filename (%root-manifest)))
 		  (member pkg (read-pkgs filename)))
-	     (set! available-manifests (append available-manifests (list filename))))
+	     (append! available-manifests (list filename)))
 	   #t
 	   ))
     (let ((answer (cond ((nil? available-manifests) #f)
@@ -166,15 +168,13 @@
 
   (walk-zeta-tree (lambda (filename)
 		    (when (string= (string-take-right filename 4) ".scm")
-		      (for-each (lambda (pkg+location)
-				  (unless (member pkg+location pkg+locations)
+		      (for-each (lambda (pkg)
+				  (unless (member pkg pkg+locations)
 				    (set! pkg+locations
-					  (append pkg+locations
-						  (list (list pkg+location filename))))))
+					  (append (list (list pkg filename)) pkg+locations))))
 				(read-pkgs filename)))))
-
-  (define padding 5)
   (when (nil? pkg+locations) (error-with-msg "No manifests recognized."))
+  (define padding 5)
   (define max-len (apply max (map (lambda (lst)
 				    (string-length (car lst))) pkg+locations)))
   (define format-str (string-append "~" (number->string (+ max-len padding)) "a"))
@@ -182,5 +182,20 @@
 	      (format output-port (string-append format-str " ~a\n") (car pkg+location)
 		      (cadr pkg+location))) pkg+locations))
 
-;; (define* (zeta-rescan)
-;;   (walk-zeta-tree (lambda (filename))))
+(define (zeta-rescan)
+  (info-with-msg (format #f "Rescanning root manifest ~a" (%root-manifest)))
+  (define scanned-manifests '())
+  (walk-zeta-tree (lambda (filename)
+		    (when (string= (string-take-right filename 4) ".scm")
+		      (info-with-msg (format #f "Found manifest ~a" filename))
+		      (set! scanned-manifests (append scanned-manifests (list filename))))))
+  (define fixed-root (root-with-manifests scanned-manifests))
+  (write-file (%root-manifest) fixed-root))
+
+(define (zeta-purge)
+  (warning-with-msg (format #f "Deleting all manifests not specified in ~a" (%root-manifest)))
+  (when (yn-prompt "Are you sure you want to proceed?")
+    (walk-zeta-tree (lambda (filename)
+		      (unless (member filename (read-manifests (%root-manifest)))
+			(info-with-msg (format #f "Deleting ~a ...." filename))
+			(delete-file filename))))))

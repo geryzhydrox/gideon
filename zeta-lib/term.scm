@@ -2,6 +2,7 @@
   #:export (println
 	    usage
 	    error-with-msg
+	    warning-with-msg
 	    info-with-msg))
 
 (define (println str)
@@ -10,25 +11,24 @@
 
 (define (usage)
   (println "Usage: zeta CMD [-m|--manifest manifest] PACKAGE ... | MANIFEST ...")
-  (format #t "Subcommands: \
+  (format #t "\
+PACKAGEs are interpreted as it would be by `guix install`.
+MANIFESTs are interpreted as suffix-less paths relative to $ZETA_ROOT.
+  Ex: foo/bar => $ZETA_ROOT/foo/bar.scm
 
+Subcommands:
 - zeta intall [-m | --manifest MANIFEST] PKG ...
-  Installs the specified packages at the specified manifest, if
-  specified, or prompts to select one from $ZETA_ROOT
+  Install PKG ... at manifest MANIFEST ... (or prompt for it, if not provided).
 
 - zeta remove [-m | --manifest MANIFEST] PKG ...
-  Same as zeta install, but for removing packages.
+  Remove  PKG ... from manifest MANIFEST ...
+  Detects MANIFEST automatically if PKG is only present at one manifest.
 
 - zeta add MANIFEST ...
-  Creates a new manifest under MANIFEST ... (which is interpreted as
-  a suffix-less path relative to $ZETA_ROOT) and adds it to
-  root.scm. For example: zeta add foo/bar would create and add the
-  manifest ~/.zeta/foo/bar.scm to root.scm, assuming that
-  $ZETA_ROOT is left at its default value (and not otherwise
-  modified programatically, via %zeta-root)
-  
+  Creates new manifests MANIFEST ... and adds them to the root manifest.
+
 - zeta del MANIFEST ...
-  Same as zeta add, except for deleting manifest.
+  Deletes the manifests MANIFEST ... and deletes them from the root manifest.
 
 - zeta list
   Lists all installed packages and their respective manifests.
@@ -36,10 +36,17 @@
 - zeta apply
   Applies the root manifest.
 
+- zeta rescan 
+  Rescans root manifest from $ZETA_ROOT directory tree.
+
+- zeta purge
+  Deletes all files in the directory tree $ZETA_ROOT not specified in
+  the root manifest.
+
 - zeta init
-  Creates the directory $ZETA_ROOT and root.scm in it, which is
-  initially just a \"skeleton\" to later load manifests into.
-  This command usually does not need to be invoked manually.")
+  (Re-) Creates the directory $ZETA_ROOT and root.scm in it.
+  This command usually does not need to be invoked manually.
+")
   (exit 1))
 
 (define (colorize str color)
