@@ -2,7 +2,6 @@
   #:use-module (zeta-lib prompts)
   #:use-module (zeta-lib system)
   #:use-module (zeta-lib term)
-  #:use-module (ice-9 ftw)
   #:use-module (ice-9 readline)
   #:export (zeta-apply
 	    zeta-add
@@ -16,7 +15,7 @@
   (unless (%dry-run?) (apply-root-manifest)))
 
 (define-recursive (zeta-add manifest-paths)
-  (single manifest-path)
+  (bind manifest-path)
   (when (not (file-exists? (%root-manifest)))
     (info-with-msg "No root manifest detected, creating new one...")
     (zeta-init #f))
@@ -50,7 +49,7 @@
      (when (%rebuild?) (zeta-apply))))
 
 (define-recursive (zeta-del manifest-paths)
-  (single manifest-path)
+  (bind manifest-path)
   (let ((filepath (relative->absolute manifest-path (%zeta-root))))
     (unless (file-exists? filepath)
       (error-with-msg (format #f "Specified manifest ~a does not exist" filepath)))
@@ -69,7 +68,7 @@
      (zeta-apply)))
 
 (define-recursive (zeta-install pkgs manifest-path)
-  (single pkg)
+  (bind pkg)
   (when (not (file-exists? (%root-manifest)))
     (info-with-msg "Root manifest does not exist.")
     (zeta-init #f))
@@ -103,7 +102,7 @@
    (zeta-apply)))
 
 (define-recursive (zeta-remove pkgs manifest-path)
-  (single pkg)
+  (bind pkg)
   (define available-manifests '())
   (define manifest-provided? manifest-path)
   (unless manifest-path
@@ -164,18 +163,15 @@
 
 (define* (zeta-list #:optional (output-port #t))
   (define pkg+locations '())
-  (ftw (%zeta-root)
-	 (lambda (filename statinfo flag)
-	   (when (and
-		  (eq? flag 'regular)
-		  (not (string= filename (%root-manifest))))
-	     (for-each (lambda (pkg+location)
-			 (when (not
-				(member pkg+location pkg+locations))
-			   (set! pkg+locations
-				 (append pkg+locations (list (list pkg+location filename))))))
-		       (read-pkgs filename)))
-	   #t))
+
+  (walk-zeta-tree (bind filename)
+		  (prelude read-pkgs)
+		  (action (lambda (pkg+location)
+			    (when (not                                                           
+				   (member pkg+location pkg+locations))                          
+			      (set! pkg+locations                                                
+				    (append pkg+locations (list (list pkg+location filename))))))))
+
   (define padding 5)
   (define max-len (apply max (map (lambda (lst)
 				    (string-length (car lst))) pkg+locations)))

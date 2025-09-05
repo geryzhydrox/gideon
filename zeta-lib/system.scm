@@ -1,5 +1,6 @@
 (define-module (zeta-lib system)
   #:use-module (ice-9 match)
+  #:use-module (ice-9 ftw)
   #:use-module (zeta-lib term)
   #:export (%zeta-root
 	    %root-manifest
@@ -19,6 +20,7 @@
 	    read-manifests
 	    manifest-with-pkgs
 	    root-with-manifests
+	    walk-zeta-tree
 	    define-recursive))
 
 
@@ -121,15 +123,40 @@
 		  (format #f "\"~a\"" manifest))
 		manifests)
 	   "\n    ")))
+;; (define* (walk-zeta-tree #:key (action-proc identity) (filter-proc identity))
+;;   "Walk $ZETA_ROOT filetree with `ftw`. `filter-proc` is applied to each filename and 
+;; `action-proc` is applied to each result `filter-proc`."
+;;   (define %filename (make-parameter ""))
+;;   (ftw (%zeta-root)
+;;        (lambda (filename statinfo flag)
+;; 	 (when (and
+;; 		(eq? flag 'regular)
+;; 		(not (string= filename (%root-manifest))))
+;; 	   (for-each (parameterize ((%filename filename)) action-proc)
+;; 		     (filter-proc filename)))
+;; 	 #t)))
 
+(define-syntax walk-zeta-tree
+  (lambda (x)
+    (syntax-case x (bind prelude action)
+      ((walk-zeta-tree (bind identifier) (prelude prelude-proc) (action action-proc))
+       #'(ftw (%zeta-root)
+	      (lambda (filename statinfo flag)
+		(when (and
+		       (eq? flag 'regular)
+		       (not (string= filename (%root-manifest))))
+		  (let ((identifier filename))
+		    (for-each action-proc
+			      (prelude-proc filename))))
+		#t))))))
 
 (define-syntax define-recursive
   ;; Macro for simplifying the definition of procedures that act on lists recursively.
   ;; First argument MUST be a list.
   (lambda (x)
-    (syntax-case x (single recurse finish)
+    (syntax-case x (bind recurse finish)
       ((define-recursive (proc-name list-arg extra-arg ...)
-	 (single identifier)
+	 (bind identifier)
 	 exp ...
 	 ;; Recurse with arguments (cdr list-arg) recurse-arg ... 
 	 (recurse recurse-arg ...)
