@@ -4,84 +4,86 @@
   #:use-module (zeta-lib term)
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 readline)
-  #:export (zeta-add
+  #:export (zeta-apply
+	    zeta-add
 	    zeta-del
 	    zeta-install
 	    zeta-remove
 	    zeta-init
 	    zeta-list))
 
+(define (zeta-apply)
+  (unless (%dry-run?) (apply-root-manifest)))
 
 (define-recursive (zeta-add manifest-paths)
   (single manifest-path)
-  (when (not (file-exists? %root-manifest))
+  (when (not (file-exists? (%root-manifest)))
     (info-with-msg "No root manifest detected, creating new one...")
     (zeta-init #f))
   (let* ((slash-index (string-rindex manifest-path #\/))
 	 (path (if slash-index
-		   (string-append %zeta-root "/"
+		   (string-append (%zeta-root) "/"
 				  (string-take manifest-path (1+ slash-index)))
-		   %zeta-root))
-	 (filepath (relative->absolute manifest-path %zeta-root)))
+		   (%zeta-root)))
+	 (filepath (relative->absolute manifest-path (%zeta-root))))
     ;; Abuse short-circuiting behaviour of `or` and `and` 
     (when (or (and (file-exists? filepath)
 		   (yn-prompt (format #f "Manifest ~a already exists. Overwrite?" filepath))
 		   (delete-file filepath)
-		   (set! %rebuild? #t))
+		   (%rebuild? #t))
 	      (not (file-exists? filepath)))
       (info-with-msg (format #f "Adding manifest ~a" filepath))
       (mkdir-p path)
       (touch filepath)
       (write-file filepath (manifest-with-pkgs '()))
-      (let* ((manifests (read-manifests %root-manifest))
+      (let* ((manifests (read-manifests (%root-manifest)))
 	     (new-manifests (if (member filepath manifests)
 				(begin
 				  (info-with-msg "Manifest already contained in root. Skipping...")
 				  manifests)
 				(append manifests (list filepath))))
 	     (new-root (root-with-manifests new-manifests)))
-	(write-file %root-manifest new-root))))
+	(write-file (%root-manifest) new-root))))
     (recurse
-     %rebuild?)
+     (%rebuild?))
     (finish
-     (when (and %rebuild? (not %dry-run?)) (apply-root-manifest))))
+     (when (%rebuild?) (zeta-apply))))
 
 (define-recursive (zeta-del manifest-paths)
   (single manifest-path)
-  (let ((filepath (relative->absolute manifest-path %zeta-root)))
+  (let ((filepath (relative->absolute manifest-path (%zeta-root))))
     (unless (file-exists? filepath)
       (error-with-msg (format #f "Specified manifest ~a does not exist" filepath)))
     (info-with-msg (format #f "Deleting manifest ~a" filepath))
     (delete-file filepath)
-    (let* ((manifests (read-manifests %root-manifest))
+    (let* ((manifests (read-manifests (%root-manifest)))
 	   (new-manifests (if (member filepath manifests)
 			      (delete filepath manifests)
 			      (begin
 				(info-with-msg "Manifest not contained in root. Skipping..."))))
 	   (new-root (root-with-manifests new-manifests)))
-      (write-file %root-manifest new-root)))
+      (write-file (%root-manifest) new-root)))
     (recurse
      (cdr manifest-paths))
     (finish
-     (unless %dry-run? 
-       (apply-root-manifest))))
+     (zeta-apply)))
 
 (define-recursive (zeta-install pkgs manifest-path)
   (single pkg)
-  (when (not (file-exists? %root-manifest))
+  (when (not (file-exists? (%root-manifest)))
     (info-with-msg "Root manifest does not exist.")
     (zeta-init #f))
   (define creating-new-manifest? #f)
   (unless manifest-path
     (info-with-msg "No manifest specified")
     (let* ((answer (numbered-prompt "Install at:"  
-				    (append (read-manifests %root-manifest) (list "Create new manifest"))))
+				    (append (read-manifests (%root-manifest)) (list "Create new manifest"))))
 	   (new-manifest-path (if (string= answer "Create new manifest") 
 				  (begin (set! creating-new-manifest? #t) (readline "Create new manifest at: "))
 				  (string-drop-right 
-				   (string-drop answer (1+ (string-length %zeta-root))) 4))))
+				   (string-drop answer (1+ (string-length (%zeta-root)))) 4))))
       (set! manifest-path new-manifest-path)))
-  (let ((filepath (relative->absolute manifest-path %zeta-root)))
+  (let ((filepath (relative->absolute manifest-path (%zeta-root))))
     (when creating-new-manifest? (zeta-add (list manifest-path)))
     (unless (file-exists? filepath)
       (info-with-msg (format #f "Specified manifest ~a does not exist" filepath))
@@ -98,8 +100,7 @@
   (recurse
    manifest-path)
   (finish
-   (unless %dry-run? 
-     (apply-root-manifest))))
+   (zeta-apply)))
 
 (define-recursive (zeta-remove pkgs manifest-path)
   (single pkg)
@@ -107,11 +108,11 @@
   (define manifest-provided? manifest-path)
   (unless manifest-path
     (info-with-msg "No manifest specified")
-    (ftw %zeta-root
+    (ftw (%zeta-root)
 	 (lambda (filename statinfo flag)
 	   (when (and
 		  (eq? flag 'regular)
-		  (not (string= filename %root-manifest))
+		  (not (string= filename (%root-manifest)))
 		  (member pkg (read-pkgs filename)))
 	     (set! available-manifests (append available-manifests (list filename))))
 	   #t
@@ -122,10 +123,10 @@
       (set! manifest-path
 	    (if answer
 		(string-drop-right 
-		 (string-drop answer (1+ (string-length %zeta-root))) 4) 
+		 (string-drop answer (1+ (string-length (%zeta-root)))) 4) 
 		(error-with-msg "Specified package is not installed."))
 	    )))
-  (let ((filepath (relative->absolute manifest-path %zeta-root)))
+  (let ((filepath (relative->absolute manifest-path (%zeta-root))))
     (unless (file-exists? filepath)
 	(error-with-msg (format #f "Specified manifest ~a does not exist" filepath)))
     (info-with-msg (format #f "Deleting package ~a from manifest ~a" pkg filepath))
@@ -143,32 +144,32 @@
        manifest-path
        #f))
   (finish
-   (unless %dry-run? 
-     (apply-root-manifest))))
+   (zeta-apply)))
 
 (define* (zeta-init #:optional (manual #t))
-  (define filepath (format #f "~a/root.scm" %zeta-root))
+  (define filepath (format #f "~a/root.scm" (%zeta-root)))
   (when (or
 	 (not manual)   
 	 (and
 	  manual
-	  (if (file-exists? %zeta-root) 
+	  (if (file-exists? (%zeta-root)) 
 	      (yn-prompt "Root manifest already exists. Overwrite?")
 	      #t)))
     (info-with-msg (format #f "Creating root manifest ~a..." filepath))
-    (make-file-at-path %zeta-root "root.scm")
+    (make-file-at-path (%zeta-root) "root.scm")
     (write-file filepath (root-with-manifests '()))
-    (set! %root-manifest (string-append %zeta-root "/" "root.scm"))
+    ;; (set! %root-manifest (string-append (%zeta-root) "/" "root.scm")) ;; &&& change
+    (%root-manifest (string-append (%zeta-root) "/" "root.scm"))
     (info-with-msg "Done.")
     ))
 
 (define* (zeta-list #:optional (output-port #t))
   (define pkg+locations '())
-  (ftw %zeta-root
+  (ftw (%zeta-root)
 	 (lambda (filename statinfo flag)
 	   (when (and
 		  (eq? flag 'regular)
-		  (not (string= filename %root-manifest)))
+		  (not (string= filename (%root-manifest))))
 	     (for-each (lambda (pkg+location)
 			 (when (not
 				(member pkg+location pkg+locations))

@@ -22,24 +22,26 @@
 	    define-recursive))
 
 
-(define %zeta-root (or (getenv "ZETA_ROOT")
-		       (string-append (getenv "HOME") "/.zeta")
-		       (error-with-msg "Something went seriously wrong. $HOME environment variable cannot be read.")))
+(define %zeta-root (make-parameter
+		    (or (getenv "ZETA_ROOT")
+			(string-append (getenv "HOME") "/.zeta")
+			(error-with-msg
+			 "Something went seriously wrong: $HOME environment variable cannot be read."))))
 
-(define %root-manifest
-  (string-append %zeta-root "/root.scm"))
+(define %root-manifest (make-parameter
+			(string-append (%zeta-root) "/root.scm")))
 
-(define %rebuild? #f)
+(define %rebuild? (make-parameter #f))
 
-(define %dry-run? #f)
+(define %dry-run? (make-parameter #f))
 
-(define* (apply-root-manifest #:optional (root-file %root-manifest))
+(define* (apply-root-manifest #:optional (root-file (%root-manifest)))
   (unless (eq? (system* "guix" "package" "-m" root-file) 0)
     (error-with-msg "Guix package command failed. Make sure `guix` is properly installed and a network connection is available."
 		    ;; TODO: Add facility to pass different args to `guix`
 		    )))
 
-(define* (relative->absolute rel-path #:optional (root-path %zeta-root))
+(define* (relative->absolute rel-path #:optional (root-path (%zeta-root)))
   (string-append root-path
 		 "/" rel-path
 		 ".scm"))
