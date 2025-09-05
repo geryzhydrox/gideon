@@ -33,6 +33,9 @@
 - zeta list
   Lists all installed packages and their respective manifests.
 
+- zeta apply
+  Applies the root manifest.
+
 - zeta init
   Creates the directory $ZETA_ROOT and root.scm in it, which is
   initially just a \"skeleton\" to later load manifests into.
