@@ -123,32 +123,16 @@
 		  (format #f "\"~a\"" manifest))
 		manifests)
 	   "\n    ")))
-;; (define* (walk-zeta-tree #:key (action-proc identity) (filter-proc identity))
-;;   "Walk $ZETA_ROOT filetree with `ftw`. `filter-proc` is applied to each filename and 
-;; `action-proc` is applied to each result `filter-proc`."
-;;   (define %filename (make-parameter ""))
-;;   (ftw (%zeta-root)
-;;        (lambda (filename statinfo flag)
-;; 	 (when (and
-;; 		(eq? flag 'regular)
-;; 		(not (string= filename (%root-manifest))))
-;; 	   (for-each (parameterize ((%filename filename)) action-proc)
-;; 		     (filter-proc filename)))
-;; 	 #t)))
-
-(define-syntax walk-zeta-tree
-  (lambda (x)
-    (syntax-case x (bind prelude action)
-      ((walk-zeta-tree (bind identifier) (prelude prelude-proc) (action action-proc))
-       #'(ftw (%zeta-root)
-	      (lambda (filename statinfo flag)
-		(when (and
-		       (eq? flag 'regular)
-		       (not (string= filename (%root-manifest))))
-		  (let ((identifier filename))
-		    (for-each action-proc
-			      (prelude-proc filename))))
-		#t))))))
+(define* (walk-zeta-tree proc)
+  "Walk $ZETA_ROOT filetree with `ftw`. `proc` is a 1-argument procedure applied to each filename."
+  (define %filename (make-parameter ""))
+  (ftw (%zeta-root)
+       (lambda (filename statinfo flag)
+	 (when (and
+		(eq? flag 'regular)
+		(not (string= filename (%root-manifest))))
+	   (proc filename))
+	 #t)))
 
 (define-syntax define-recursive
   ;; Macro for simplifying the definition of procedures that act on lists recursively.

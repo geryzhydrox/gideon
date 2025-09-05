@@ -164,18 +164,23 @@
 (define* (zeta-list #:optional (output-port #t))
   (define pkg+locations '())
 
-  (walk-zeta-tree (bind filename)
-		  (prelude read-pkgs)
-		  (action (lambda (pkg+location)
-			    (when (not                                                           
-				   (member pkg+location pkg+locations))                          
-			      (set! pkg+locations                                                
-				    (append pkg+locations (list (list pkg+location filename))))))))
+  (walk-zeta-tree (lambda (filename)
+		    (when (string= (string-take-right filename 4) ".scm")
+		      (for-each (lambda (pkg+location)
+				  (unless (member pkg+location pkg+locations)
+				    (set! pkg+locations
+					  (append pkg+locations
+						  (list (list pkg+location filename))))))
+				(read-pkgs filename)))))
 
   (define padding 5)
+  (when (nil? pkg+locations) (error-with-msg "No manifests recognized."))
   (define max-len (apply max (map (lambda (lst)
 				    (string-length (car lst))) pkg+locations)))
   (define format-str (string-append "~" (number->string (+ max-len padding)) "a"))
   (for-each (lambda (pkg+location)
 	      (format output-port (string-append format-str " ~a\n") (car pkg+location)
 		      (cadr pkg+location))) pkg+locations))
+
+;; (define* (zeta-rescan)
+;;   (walk-zeta-tree (lambda (filename))))
