@@ -1,6 +1,8 @@
 #!/usr/bin/env guile
 !#
- 
+
+;; Not defining a module here, as this is the CLI interface. 
+
 (use-modules (ice-9 match)
 	     (ice-9 getopt-long)
 	     (srfi srfi-1)
@@ -24,7 +26,9 @@
 		    (string= str "-m")
 		    (string-contains str "--dry-run")
 		    (string= str "-d"))) cmdline))
+
 (set! cmdline (delete provided-manifest cmdline))
+
 (parameterize ((%dry-run? (option-ref options 'dry-run #f)))
   (match cmdline
     ((_ "add" manifest-path ...) (zeta-add manifest-path))

@@ -15,9 +15,9 @@
    (method git-fetch)
    (uri (git-reference
 	 (url "https://github.com/geryzhydrox/zeta")
-	 (commit "900b0b908fec2d53f8b2bbb8f377f19d433fc9d4")))
+	 (commit "aa1d812b579dacfdafbe3c80d762304f377b2e73")))
    (sha256
-    (base32 "0p6qyrrrnlqb0i16w7lym0xnwyc4dcz2srb5gm57v9ckzffv7rsq"))))
+    (base32 "17rcwv4h47hc0ss971304ia8ngj02frmvxshga8wxscgkjvkzh31"))))
  (build-system guile-build-system)
  (arguments
   '(#:phases (modify-phases %standard-phases

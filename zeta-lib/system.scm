@@ -38,10 +38,12 @@
 (define %dry-run? (make-parameter #f))
 
 (define* (apply-root-manifest #:optional (root-file (%root-manifest)))
-  (unless (eq? (system* "guix" "package" "-m" root-file) 0)
-    (error-with-msg "Guix package command failed. Make sure `guix` is properly installed and a network connection is available."
-		    ;; TODO: Add facility to pass different args to `guix`
-		    )))
+   ;; TODO: Add facility to pass different args to `guix`, make `zeta` itself atomic
+  (case (system (string-append "guix package -m " root-file))
+    ((0)   (info-with-msg "Guix command succeeded."))
+    ((130) (info-with-msg "Interrupted."))
+    (else  (error-with-msg "Guix package command failed. Make sure `guix` is properly installed \
+and a network connection is available."))))
 
 (define* (relative->absolute rel-path #:optional (root-path (%zeta-root)))
   (string-append root-path
