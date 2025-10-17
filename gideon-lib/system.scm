@@ -1,15 +1,15 @@
-(define-module (zeta-lib system)
+(define-module (gideon-lib system)
   #:use-module (ice-9 match)
   #:use-module (ice-9 ftw)
-  #:use-module (zeta-lib term)
-  #:export (%zeta-root
+  #:use-module (gideon-lib term)
+  #:export (%gideon-root
 	    %root-manifest
 	    %rebuild?
 	    %dry-run?
 	    apply-root-manifest
 	    relative->absolute
-	    get-zeta-root
-	    set-zeta-root
+	    get-gideon-root
+	    set-gideon-root
 	    mkdir-p
 	    touch
 	    make-file-at-path
@@ -20,32 +20,32 @@
 	    read-manifests
 	    manifest-with-pkgs
 	    root-with-manifests
-	    walk-zeta-tree
+	    walk-gideon-tree
 	    define-recursive))
 
 
-(define %zeta-root (make-parameter
-		    (or (getenv "ZETA_ROOT")
-			(string-append (getenv "HOME") "/.zeta")
+(define %gideon-root (make-parameter
+		    (or (getenv "GIDEON_ROOT")
+			(string-append (getenv "HOME") "/.gideon")
 			(error-with-msg
 			 "Something went seriously wrong: $HOME environment variable cannot be read."))))
 
 (define %root-manifest (make-parameter
-			(string-append (%zeta-root) "/root.scm")))
+			(string-append (%gideon-root) "/root.scm")))
 
 (define %rebuild? (make-parameter #f))
 
 (define %dry-run? (make-parameter #f))
 
 (define* (apply-root-manifest #:optional (root-file (%root-manifest)))
-   ;; TODO: Add facility to pass different args to `guix`, make `zeta` itself atomic
+   ;; TODO: Add facility to pass different args to `guix`, make `gideon` itself atomic
   (case (system (string-append "guix package -m " root-file))
     ((0)   (info-with-msg "Guix command succeeded."))
     ((130) (info-with-msg "Interrupted."))
     (else  (error-with-msg "Guix package command failed. Make sure `guix` is properly installed \
 and a network connection is available."))))
 
-(define* (relative->absolute rel-path #:optional (root-path (%zeta-root)))
+(define* (relative->absolute rel-path #:optional (root-path (%gideon-root)))
   (string-append root-path
 		 "/" rel-path
 		 ".scm"))
@@ -99,7 +99,7 @@ and a network connection is available."))))
 	    ('quote (manifests ...)))) manifests)
     (_ (if pedantic
 	   (begin (error-with-msg "Cannot read manifests from root file.")
-		  ;; TODO: More helpful error. Maybe add command like `zeta fix` too fix broken root?
+		  ;; TODO: More helpful error. Maybe add command like `gideon fix` too fix broken root?
 		  )
 	   '()))))
 
@@ -125,10 +125,10 @@ and a network connection is available."))))
 		  (format #f "\"~a\"" manifest))
 		manifests)
 	   "\n    ")))
-(define* (walk-zeta-tree proc)
-  "Walk $ZETA_ROOT filetree with `ftw`. `proc` is a 1-argument procedure applied to each filename."
+(define* (walk-gideon-tree proc)
+  "Walk $GIDEON_ROOT filetree with `ftw`. `proc` is a 1-argument procedure applied to each filename."
   (define %filename (make-parameter ""))
-  (ftw (%zeta-root)
+  (ftw (%gideon-root)
        (lambda (filename statinfo flag)
 	 (when (and
 		(eq? flag 'regular)

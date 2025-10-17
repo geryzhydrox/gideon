@@ -2,9 +2,9 @@
 @c -*-texinfo-*-
 
 @c %**start of header
-@setfilename zeta.info
+@setfilename gideon.info
 @documentencoding UTF-8
-@settitle Zeta Reference Manual
+@settitle Gideon Reference Manual
 @c %**end of header
 
 @include version.texi
@@ -22,11 +22,11 @@ Documentation License''.
 
 @dircategory The Algorithmic Language Scheme
 @direntry
-* Zeta: (zeta).   
+* Gideon: (gideon).   
 @end direntry
 
 @titlepage
-@title The Zeta Manual
+@title The Gideon Manual
 @author 
 
 @page
@@ -41,12 +41,12 @@ Edition @value{EDITION} @*
 
 @c *********************************************************************
 @node Top
-@top Zeta
+@top Gideon
 
-This document describes Zeta version @value{VERSION}.
+This document describes Gideon version @value{VERSION}.
 
 @menu
-* Introduction::                Why Zeta?
+* Introduction::                Why Gideon?
 @end menu
 
 @c *********************************************************************

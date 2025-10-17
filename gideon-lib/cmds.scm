@@ -1,32 +1,32 @@
-(define-module (zeta-lib cmds)
-  #:use-module (zeta-lib prompts)
-  #:use-module (zeta-lib system)
-  #:use-module (zeta-lib term)
+(define-module (gideon-lib cmds)
+  #:use-module (gideon-lib prompts)
+  #:use-module (gideon-lib system)
+  #:use-module (gideon-lib term)
   #:use-module (ice-9 readline)
-  #:export (zeta-apply
-	    zeta-add
-	    zeta-del
-	    zeta-install
-	    zeta-remove
-	    zeta-list
-	    zeta-rescan
-	    zeta-purge
-	    zeta-init))
+  #:export (gideon-apply
+	    gideon-add
+	    gideon-del
+	    gideon-install
+	    gideon-remove
+	    gideon-list
+	    gideon-rescan
+	    gideon-purge
+	    gideon-init))
 
-(define (zeta-apply)
+(define (gideon-apply)
   (unless (%dry-run?) (apply-root-manifest)))
 
-(define-recursive (zeta-add manifest-paths)
+(define-recursive (gideon-add manifest-paths)
   (bind manifest-path)
   (when (not (file-exists? (%root-manifest)))
     (info-with-msg "No root manifest detected, creating new one...")
-    (zeta-init #f))
+    (gideon-init #f))
   (let* ((slash-index (string-rindex manifest-path #\/))
 	 (path (if slash-index
-		   (string-append (%zeta-root) "/"
+		   (string-append (%gideon-root) "/"
 				  (string-take manifest-path (1+ slash-index)))
-		   (%zeta-root)))
-	 (filepath (relative->absolute manifest-path (%zeta-root))))
+		   (%gideon-root)))
+	 (filepath (relative->absolute manifest-path (%gideon-root))))
     ;; Abuse short-circuiting behaviour of `or` and `and` 
     (when (or (and (file-exists? filepath)
 		   (yn-prompt (format #f "Manifest ~a already exists. Overwrite?" filepath))
@@ -48,11 +48,11 @@
     (recurse
      (%rebuild?))
     (finish
-     (when (%rebuild?) (zeta-apply))))
+     (when (%rebuild?) (gideon-apply))))
 
-(define-recursive (zeta-del manifest-paths)
+(define-recursive (gideon-del manifest-paths)
   (bind manifest-path)
-  (let ((filepath (relative->absolute manifest-path (%zeta-root))))
+  (let ((filepath (relative->absolute manifest-path (%gideon-root))))
     (unless (file-exists? filepath)
       (error-with-msg (format #f "Specified manifest ~a does not exist" filepath)))
     (info-with-msg (format #f "Deleting manifest ~a" filepath))
@@ -67,13 +67,13 @@
     (recurse
      (cdr manifest-paths))
     (finish
-     (zeta-apply)))
+     (gideon-apply)))
 
-(define-recursive (zeta-install pkgs manifest-path)
+(define-recursive (gideon-install pkgs manifest-path)
   (bind pkg)
   (when (not (file-exists? (%root-manifest)))
     (info-with-msg "Root manifest does not exist.")
-    (zeta-init #f))
+    (gideon-init #f))
   (define creating-new-manifest? #f)
   (unless manifest-path
     (info-with-msg "No manifest specified")
@@ -82,13 +82,13 @@
 	   (new-manifest-path (if (string= answer "Create new manifest") 
 				  (begin (set! creating-new-manifest? #t) (readline "Create new manifest at: "))
 				  (string-drop-right 
-				   (string-drop answer (1+ (string-length (%zeta-root)))) 4))))
+				   (string-drop answer (1+ (string-length (%gideon-root)))) 4))))
       (set! manifest-path new-manifest-path)))
-  (let ((filepath (relative->absolute manifest-path (%zeta-root))))
-    (when creating-new-manifest? (zeta-add (list manifest-path)))
+  (let ((filepath (relative->absolute manifest-path (%gideon-root))))
+    (when creating-new-manifest? (gideon-add (list manifest-path)))
     (unless (file-exists? filepath)
       (info-with-msg (format #f "Specified manifest ~a does not exist" filepath))
-      (when (yn-prompt "Create manifest?") (zeta-add (list manifest-path))))
+      (when (yn-prompt "Create manifest?") (gideon-add (list manifest-path))))
     (info-with-msg (format #f "Installing package ~a at manifest ~a" pkg filepath))
     (let* ((manifest-pkgs (read-pkgs filepath))
 	   (new-pkgs (if (member pkg manifest-pkgs)
@@ -101,15 +101,15 @@
   (recurse
    manifest-path)
   (finish
-   (zeta-apply)))
+   (gideon-apply)))
 
-(define-recursive (zeta-remove pkgs manifest-path)
+(define-recursive (gideon-remove pkgs manifest-path)
   (bind pkg)
   (define available-manifests '())
   (define manifest-provided? manifest-path)
   (unless manifest-path
     (info-with-msg "No manifest specified")
-    (ftw (%zeta-root)
+    (ftw (%gideon-root)
 	 (lambda (filename statinfo flag)
 	   (when (and
 		  (eq? flag 'regular)
@@ -124,10 +124,10 @@
       (set! manifest-path
 	    (if answer
 		(string-drop-right 
-		 (string-drop answer (1+ (string-length (%zeta-root)))) 4) 
+		 (string-drop answer (1+ (string-length (%gideon-root)))) 4) 
 		(error-with-msg "Specified package is not installed."))
 	    )))
-  (let ((filepath (relative->absolute manifest-path (%zeta-root))))
+  (let ((filepath (relative->absolute manifest-path (%gideon-root))))
     (unless (file-exists? filepath)
 	(error-with-msg (format #f "Specified manifest ~a does not exist" filepath)))
     (info-with-msg (format #f "Deleting package ~a from manifest ~a" pkg filepath))
@@ -145,28 +145,28 @@
        manifest-path
        #f))
   (finish
-   (zeta-apply)))
+   (gideon-apply)))
 
-(define* (zeta-init #:optional (manual #t))
-  (define filepath (format #f "~a/root.scm" (%zeta-root)))
+(define* (gideon-init #:optional (manual #t))
+  (define filepath (format #f "~a/root.scm" (%gideon-root)))
   (when (or
 	 (not manual)   
 	 (and
 	  manual
-	  (if (file-exists? (%zeta-root)) 
+	  (if (file-exists? (%gideon-root)) 
 	      (yn-prompt "Root manifest already exists. Overwrite?")
 	      #t)))
     (info-with-msg (format #f "Creating root manifest ~a..." filepath))
-    (make-file-at-path (%zeta-root) "root.scm")
+    (make-file-at-path (%gideon-root) "root.scm")
     (write-file filepath (root-with-manifests '()))
-    (%root-manifest (string-append (%zeta-root) "/" "root.scm"))
+    (%root-manifest (string-append (%gideon-root) "/" "root.scm"))
     (info-with-msg "Done.")
     ))
 
-(define* (zeta-list #:optional (output-port #t))
+(define* (gideon-list #:optional (output-port #t))
   (define pkg+locations '())
 
-  (walk-zeta-tree (lambda (filename)
+  (walk-gideon-tree (lambda (filename)
 		    (when (string= (string-take-right filename 4) ".scm")
 		      (for-each (lambda (pkg)
 				  (unless (member pkg pkg+locations)
@@ -182,20 +182,20 @@
 	      (format output-port (string-append format-str " ~a\n") (car pkg+location)
 		      (cadr pkg+location))) pkg+locations))
 
-(define (zeta-rescan)
+(define (gideon-rescan)
   (info-with-msg (format #f "Rescanning root manifest ~a" (%root-manifest)))
   (define scanned-manifests '())
-  (walk-zeta-tree (lambda (filename)
+  (walk-gideon-tree (lambda (filename)
 		    (when (string= (string-take-right filename 4) ".scm")
 		      (info-with-msg (format #f "Found manifest ~a" filename))
 		      (set! scanned-manifests (append scanned-manifests (list filename))))))
   (define fixed-root (root-with-manifests scanned-manifests))
   (write-file (%root-manifest) fixed-root))
 
-(define (zeta-purge)
+(define (gideon-purge)
   (warning-with-msg (format #f "Deleting all manifests not specified in ~a" (%root-manifest)))
   (when (yn-prompt "Are you sure you want to proceed?")
-    (walk-zeta-tree (lambda (filename)
+    (walk-gideon-tree (lambda (filename)
 		      (unless (member filename (read-manifests (%root-manifest)))
 			(info-with-msg (format #f "Deleting ~a ...." filename))
 			(delete-file filename))))))

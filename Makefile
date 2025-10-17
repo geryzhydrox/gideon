@@ -1,6 +1,6 @@
-MAIN := zeta
+MAIN := gideon
 TEST := ./tests/tests.scm
-LIBS := ./zeta-lib/cmds.scm ./zeta-lib/prompts.scm ./zeta-lib/system.scm ./zeta-lib/term.scm
+LIBS := ./gideon-lib/cmds.scm ./gideon-lib/prompts.scm ./gideon-lib/system.scm ./gideon-lib/term.scm
 BUILD := guild compile -L ./
 BUILD_NO_DEPS := guild compile
 
@@ -12,15 +12,15 @@ all: $(MAIN) cmds system term prompts
 test: cmds system term prompts
 	$(BUILD) $(TEST)
 	guile -L . $(TEST)
-cmds: system prompts term ./zeta-lib/cmds.scm
-	$(BUILD) ./zeta-lib/cmds.scm
+cmds: system prompts term ./gideon-lib/cmds.scm
+	$(BUILD) ./gideon-lib/cmds.scm
 
-system: term ./zeta-lib/system.scm
-	$(BUILD) ./zeta-lib/system.scm
+system: term ./gideon-lib/system.scm
+	$(BUILD) ./gideon-lib/system.scm
 
-prompts: ./zeta-lib/prompts.scm
-	$(BUILD_NO_DEPS) ./zeta-lib/prompts.scm
+prompts: ./gideon-lib/prompts.scm
+	$(BUILD_NO_DEPS) ./gideon-lib/prompts.scm
 
-term: ./zeta-lib/term.scm
-	$(BUILD_NO_DEPS) ./zeta-lib/term.scm
+term: ./gideon-lib/term.scm
+	$(BUILD_NO_DEPS) ./gideon-lib/term.scm
 

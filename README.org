@@ -1,6 +1,6 @@
 # -*- mode: org; coding: utf-8; -*-
 
-#+TITLE: README for Zeta
+#+TITLE: README for Gideon
 * Motivation
 Declarative package management sucks.  There's a reason imperative
 package managers like =apt= have become the norm: The workflow is
@@ -24,69 +24,69 @@ your package manifest(s) to VC via git and have an overview of what's
 installed at all times.
 
 * Technical aspects
-=zeta= aims to be simple, lightweight, and programmed in a functional style or
+=gideon= aims to be simple, lightweight, and programmed in a functional style or
 procedural style when convenient.  It uses =guix='s =manifest= feature
 (specifically, =specifications->manifest= and =concatenate-manifests=) to build a
 "root" manifest (=root.scm= by default) from a directory tree (located
-at =$ZETA_ROOT=, =$HOME/.zeta= by default) and install it via =guix
+at =$GIDEON_ROOT=, =$HOME/.gideon= by default) and install it via =guix
 install -m=. This has the advantage that you can manually use both the
 individual manifests as well as the root manifest as inputs for =guix
 shell -m= or =guix install -m=.
 
 * Subcommands:
-- =zeta init=
+- =gideon init=
 
-  Creates the directory =$ZETA_ROOT= and =root.scm= in it, which is
+  Creates the directory =$GIDEON_ROOT= and =root.scm= in it, which is
   initially just a "skeleton" to later load manifests into.
   Does not usually need to be invoked manually, unless one wants to
   completely re-initialize the directory tree. 
 
-- =zeta intall [-m | --manifest MANIFEST] PKG ...=
+- =gideon intall [-m | --manifest MANIFEST] PKG ...=
 
   Installs the specified packages at the specified manifest, if
-  specified, or prompts to select one from =$ZETA_ROOT=
+  specified, or prompts to select one from =$GIDEON_ROOT=
 
-- =zeta remove [-m | --manifest MANIFEST] PKG ...=
+- =gideon remove [-m | --manifest MANIFEST] PKG ...=
 
-  Same as =zeta install=, but for removing packages.
+  Same as =gideon install=, but for removing packages.
 
-- =zeta add MANIFEST ...=
+- =gideon add MANIFEST ...=
 
   Creates a new manifest under MANIFEST ... (which is interpreted as
-  a suffix-less path relative to =$ZETA_ROOT=) and adds it to
-  =root.scm=. For example: =zeta add foo/bar= would create and add the
-  manifest =~/.zeta/foo/bar.scm= to =root.scm=, assuming that
-  =$ZETA_ROOT= is left at its default value (and not otherwise
-  modified programatically, via =%zeta-root=)
+  a suffix-less path relative to =$GIDEON_ROOT=) and adds it to
+  =root.scm=. For example: =gideon add foo/bar= would create and add the
+  manifest =~/.gideon/foo/bar.scm= to =root.scm=, assuming that
+  =$GIDEON_ROOT= is left at its default value (and not otherwise
+  modified programatically, via =%gideon-root=)
   
-- =zeta del MANIFEST ...=
+- =gideon del MANIFEST ...=
 
-  Same as =zeta add=, except for deleting manifest.
+  Same as =gideon add=, except for deleting manifest.
 
-- =zeta list=
+- =gideon list=
 
   Lists all installed packages and their respective manifests.
 
-- =zeta apply=
+- =gideon apply=
 
-  Applies the root manifest. Equivalent to =guix package -m $ZETA_ROOT/root.scm=.
+  Applies the root manifest. Equivalent to =guix package -m $GIDEON_ROOT/root.scm=.
     
-- =zeta rescan=   
+- =gideon rescan=   
 
   Rescans root manifest from the directory tree. Use this if you have manually
   operated on manifests, causing =root.scm= to get out of sync.
 
-- =zeta purge=
+- =gideon purge=
 
   Deletes all files in the directory tree not specified in the root
-  manifest.  Complementary to =zeta rescan=. Use this if you want to
+  manifest.  Complementary to =gideon rescan=. Use this if you want to
   quickly dispose of manually / accidentally created files under
-  =$ZETA_ROOT= which are not included in the root
+  =$GIDEON_ROOT= which are not included in the root
   manifest (e.g. Emacs backup files, notes).
   
 * Wishlist / TODO
 - [X] Basic package/manifest management
-- [ ] Dry-runs before modifying manifests, =zeta=-level atomicity 
+- [ ] Dry-runs before modifying manifests, =gideon=-level atomicity 
 - [ ] O(1) package location lookup table (?) 
 - [ ] Channel management
 - [ ] Upgrading via =guix pull= (?) 

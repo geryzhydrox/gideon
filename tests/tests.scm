@@ -1,50 +1,50 @@
 (use-modules (srfi srfi-64)
-	     (zeta-lib cmds)
-	     (zeta-lib system)
-	     (zeta-lib term))
+	     (gideon-lib cmds)
+	     (gideon-lib system)
+	     (gideon-lib term))
 
-(%zeta-root (string-append "." "/test_root"))
-(%root-manifest (string-append (%zeta-root) "/root.scm"))
+(%gideon-root (string-append "." "/test_root"))
+(%root-manifest (string-append (%gideon-root) "/root.scm"))
 (%dry-run? #t)
 
-(test-begin "zeta-install")
+(test-begin "gideon-install")
 (define test-manifest "foo")
 
-(zeta-add (list test-manifest))
-(zeta-install '("hello" "cowsay" "sl") test-manifest)
+(gideon-add (list test-manifest))
+(gideon-install '("hello" "cowsay" "sl") test-manifest)
 (test-equal
-     (read-pkgs (relative->absolute test-manifest (%zeta-root)))
+     (read-pkgs (relative->absolute test-manifest (%gideon-root)))
   (list "hello" "cowsay" "sl"))
 
 (test-equal
     (read-manifests (%root-manifest))
-  (list (relative->absolute "foo" (%zeta-root))))
-(test-end "zeta-install")
+  (list (relative->absolute "foo" (%gideon-root))))
+(test-end "gideon-install")
 
 
-(test-begin "zeta-remove")
-(zeta-remove '("hello" "cowsay") test-manifest)
+(test-begin "gideon-remove")
+(gideon-remove '("hello" "cowsay") test-manifest)
 
 (test-equal
-    (read-pkgs (relative->absolute test-manifest (%zeta-root)))
+    (read-pkgs (relative->absolute test-manifest (%gideon-root)))
 	       '("sl"))
-(test-end "zeta-remove")
+(test-end "gideon-remove")
 
-(test-begin "zeta-list")
+(test-begin "gideon-list")
 (test-equal
     (call-with-output-string 
-      zeta-list)
+      gideon-list)
   "sl      ./test_root/foo.scm\n")
-(test-end "zeta-list")
+(test-end "gideon-list")
 
-(test-begin "zeta-del")
-(zeta-del (list test-manifest))
+(test-begin "gideon-del")
+(gideon-del (list test-manifest))
 
 (test-equal
     (read-manifests (%root-manifest))
   '())
-(test-end "zeta-del")
+(test-end "gideon-del")
 
 
 
-(system* "rm" "-r" (%zeta-root))
+(system* "rm" "-r" (%gideon-root))

@@ -1,4 +1,4 @@
-(define-module (zeta-lib term)
+(define-module (gideon-lib term)
   #:export (println
 	    usage
 	    error-with-msg
@@ -10,41 +10,41 @@
   (newline))
 
 (define (usage)
-  (println "Usage: zeta CMD [-m|--manifest manifest] PACKAGE ... | MANIFEST ...")
+  (println "Usage: gideon CMD [-m|--manifest manifest] PACKAGE ... | MANIFEST ...")
   (format #t "\
 PACKAGEs are interpreted as it would be by `guix install`.
-MANIFESTs are interpreted as suffix-less paths relative to $ZETA_ROOT.
-  Ex: foo/bar => $ZETA_ROOT/foo/bar.scm
+MANIFESTs are interpreted as suffix-less paths relative to $GIDEON_ROOT.
+  Ex: foo/bar => $GIDEON_ROOT/foo/bar.scm
 
 Subcommands:
-- zeta intall [-m | --manifest MANIFEST] PKG ...
+- gideon intall [-m | --manifest MANIFEST] PKG ...
   Install PKG ... at manifest MANIFEST ... (or prompt for it, if not provided).
 
-- zeta remove [-m | --manifest MANIFEST] PKG ...
+- gideon remove [-m | --manifest MANIFEST] PKG ...
   Remove  PKG ... from manifest MANIFEST ...
   Detects MANIFEST automatically if PKG is only present at one manifest.
 
-- zeta add MANIFEST ...
+- gideon add MANIFEST ...
   Creates new manifests MANIFEST ... and adds them to the root manifest.
 
-- zeta del MANIFEST ...
+- gideon del MANIFEST ...
   Deletes the manifests MANIFEST ... and deletes them from the root manifest.
 
-- zeta list
+- gideon list
   Lists all installed packages and their respective manifests.
 
-- zeta apply
+- gideon apply
   Applies the root manifest.
 
-- zeta rescan 
-  Rescans root manifest from $ZETA_ROOT directory tree.
+- gideon rescan 
+  Rescans root manifest from $GIDEON_ROOT directory tree.
 
-- zeta purge
-  Deletes all files in the directory tree $ZETA_ROOT not specified in
+- gideon purge
+  Deletes all files in the directory tree $GIDEON_ROOT not specified in
   the root manifest.
 
-- zeta init
-  (Re-) Creates the directory $ZETA_ROOT and root.scm in it.
+- gideon init
+  (Re-) Creates the directory $GIDEON_ROOT and root.scm in it.
   This command usually does not need to be invoked manually.
 ")
   (exit 1))
