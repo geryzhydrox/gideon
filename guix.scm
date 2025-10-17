@@ -15,9 +15,9 @@
    (method git-fetch)
    (uri (git-reference
 	 (url "https://github.com/geryzhydrox/gideon")
-	 (commit "4ae2ed0e18fdfc4ac2b0e5fcf6a8579266f0b894")))
+	 (commit "f5f0f7a3395d77d3f4627637d04c324e34597ff0")))
    (sha256
-    (base32 "0x1vpv0y5i85x59pj7dh427kdjxy7lzshwadapjil40x0rzlsi2l"))))
+    (base32 "132la0dx2wz2004aig6yrj18l7v46sflxbky8nkhfqgsxxhwr2q9"))))
  (build-system guile-build-system)
  (arguments
   '(#:source-directory "src"
@@ -26,7 +26,7 @@
 				       (lambda* (#:key outputs #:allow-other-keys)
 					 (let* ((out (assoc-ref outputs "out"))
 						(bin (string-append out "/bin")))
-					   (install-file "gideon" bin)
+					   (install-file "src/gideon" bin)
 					   ))))))
  (native-inputs (list
 		 guile-3.0
