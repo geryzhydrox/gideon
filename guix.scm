@@ -15,12 +15,13 @@
    (method git-fetch)
    (uri (git-reference
 	 (url "https://github.com/geryzhydrox/gideon")
-	 (commit "4fcb3df7f4fbb4181dfda4c494251b430961e2c9")))
+	 (commit "4ae2ed0e18fdfc4ac2b0e5fcf6a8579266f0b894")))
    (sha256
-    (base32 "126v05jaq3dv67rgyvpfqcjqjhdalmhdmw6qs63nxwkg9w2fbkv1"))))
+    (base32 "0x1vpv0y5i85x59pj7dh427kdjxy7lzshwadapjil40x0rzlsi2l"))))
  (build-system guile-build-system)
  (arguments
-  '(#:phases (modify-phases %standard-phases
+  '(#:source-directory "src"
+    #:phases (modify-phases %standard-phases
 			    (add-after 'build 'install
 				       (lambda* (#:key outputs #:allow-other-keys)
 					 (let* ((out (assoc-ref outputs "out"))
